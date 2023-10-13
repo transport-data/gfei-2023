@@ -1,0 +1,10 @@
+# Input data
+*.xlsx
+*#
+
+# Output
+*.xml
+
+# Pytest and related
+.benchmarks
+.pytest_cache
