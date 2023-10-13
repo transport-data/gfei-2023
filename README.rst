@@ -14,3 +14,9 @@ The code generates six files:
 - ``structure.xml`` —structural information.
 - ``data.xml`` —all data in SDMX-ML format.
 - ``data-{FP,REG,SEC,WT}.csv`` —data for each measure in separate SDMX-CSV files.
+
+TODO:
+
+- [ ] Add an ``example.py`` to show how to read the files.
+- [ ] Add UNIT_MEASURE attributes and code list.
+- [ ] Automatically compress.
