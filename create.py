@@ -1,3 +1,5 @@
+# from copy import deepcopy
+
 import pandas as pd
 import sdmx
 import sdmx.message as msg
@@ -27,6 +29,17 @@ POWERTRAIN = {
     "unclassified": "unclassified",
 }
 
+MEASURE = {
+    "SEC": (
+        "specific_energy_cosumption_l_100km",  # [sic]
+        "Specific energy consumption",
+        "litre / 100 km",
+    ),
+    "WT": ("weight_kg", "Vehicle mass", "kg"),
+    "FP": ("footprint_m2", "Vehicle footprint", "m²"),
+    "REG": ("registrations", "Registrations", "1"),
+}
+
 
 def create_structures() -> msg.StructureMessage:
     """Create data structures."""
@@ -46,20 +59,20 @@ def create_structures() -> msg.StructureMessage:
         ],
     )
 
-    # Common arguments for creating item schemes
-    is_args = dict(
+    # Common arguments for creating maintainable artefacts
+    ma_args = dict(
         version="1.0", maintainer=a, is_external_reference=False, is_final=True
     )
 
     # Create an agency scheme to store
-    as_ = model.AgencyScheme(id="AGENCIES", **is_args)
+    as_ = model.AgencyScheme(id="AGENCIES", **ma_args)
     as_.append(a)
     sm.add(as_)
 
     # Create the SEGMENT and POWERTRAIN code lists using static data
     for codelist_id, codes in ("SEGMENT", SEGMENT), ("POWERTRAIN", POWERTRAIN):
         # Create a code list
-        cl = model.Codelist(id=codelist_id, **is_args)
+        cl = model.Codelist(id=codelist_id, **ma_args)
 
         # Add codes
         for id, name in codes.items():
@@ -73,7 +86,7 @@ def create_structures() -> msg.StructureMessage:
         id="AREA",
         description="Original data has only alpha-3 codes. "
         "Names retrieved from the ISO 3166-1 database via pycountry.",
-        **is_args
+        **ma_args
     )
 
     # Determine unique values from the "data" sheet
@@ -98,9 +111,40 @@ def create_structures() -> msg.StructureMessage:
 
     sm.add(cl)
 
-    # TODO Create the YEAR code list
-    # TODO Create the concept scheme with the measures
-    # TODO Create the data structure definition(s) and data frame(s)
+    # Create a concept scheme containing the measures
+    cs = model.ConceptScheme(id="MEASURE", **ma_args)
+    for id, info in MEASURE.items():
+        cs.append(model.Concept(id=id, name=info[1]))
+    sm.add(cs)
+
+    # Create the data structure definitions and data flows
+
+    # Common dimensions
+    dims = []
+    for id in "AREA", "SEGMENT", "POWERTRAIN":
+        dims.append(
+            model.Dimension(
+                id=id,
+                # concept_identity=...,
+                local_representation=model.Representation(enumerated=sm.codelist[id]),
+            )
+        )
+    dims.append(model.Dimension(id="YEAR"))
+
+    for id, info in MEASURE.items():
+        # Data structure definition (DSD)
+        dsd = model.DataStructureDefinition(id=id, **ma_args)
+        # Use the common dimensions
+        dsd.dimensions.extend(dims)
+        # Record the primary measure
+        dsd.measures.append(model.PrimaryMeasure(id=id, concept_identity=cs[id]))
+
+        # Data flow structured by the DSD
+        dfd = model.DataflowDefinition(id=id, **ma_args, structure=dsd)
+
+        # Store both
+        sm.add(dsd)
+        sm.add(dfd)
 
     return sm
 
