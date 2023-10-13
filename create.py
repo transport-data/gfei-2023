@@ -32,15 +32,34 @@ def create_structures() -> msg.StructureMessage:
     """Create data structures."""
     sm = msg.StructureMessage()
 
-    # TODO Create the maintainer agency
+    # Create the maintainer agency
+    a = model.Agency(
+        id="GFEI_2023",
+        name="GFEI 2023 benchmarking authors",
+        contact=[
+            model.Contact(name="Pierpaolo Cazzola"),
+            model.Contact(name="Jacob Teter"),
+            model.Contact(name="Leonardo Paoli", email=["paoli.leonardo@gmail.com"]),
+            model.Contact(
+                name="Paul Natsuo Kishimoto", email=["mail@paul.kishimoto.name"]
+            ),
+        ],
+    )
 
-    # Common arguments for creating code lists
-    cl_args = dict(is_external_reference=False, is_final=True)
+    # Common arguments for creating item schemes
+    is_args = dict(
+        version="1.0", maintainer=a, is_external_reference=False, is_final=True
+    )
+
+    # Create an agency scheme to store
+    as_ = model.AgencyScheme(id="AGENCIES", **is_args)
+    as_.append(a)
+    sm.add(as_)
 
     # Create the SEGMENT and POWERTRAIN code lists using static data
     for codelist_id, codes in ("SEGMENT", SEGMENT), ("POWERTRAIN", POWERTRAIN):
         # Create a code list
-        cl = model.Codelist(id=codelist_id, **cl_args)
+        cl = model.Codelist(id=codelist_id, **is_args)
 
         # Add codes
         for id, name in codes.items():
@@ -54,7 +73,7 @@ def create_structures() -> msg.StructureMessage:
         id="AREA",
         description="Original data has only alpha-3 codes. "
         "Names retrieved from the ISO 3166-1 database via pycountry.",
-        **cl_args
+        **is_args
     )
 
     # Determine unique values from the "data" sheet
