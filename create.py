@@ -2,6 +2,7 @@ import pandas as pd
 import sdmx
 import sdmx.message as msg
 import sdmx.model.v21 as model
+from pycountry import countries
 
 FILENAME = "supplementary_information_gfei2023_tdc.xlsx"
 
@@ -32,12 +33,14 @@ def create_structures() -> msg.StructureMessage:
     sm = msg.StructureMessage()
 
     # TODO Create the maintainer agency
-    # TODO Create the AREA code list
+
+    # Common arguments for creating code lists
+    cl_args = dict(is_external_reference=False, is_final=True)
 
     # Create the SEGMENT and POWERTRAIN code lists using static data
     for codelist_id, codes in ("SEGMENT", SEGMENT), ("POWERTRAIN", POWERTRAIN):
         # Create a code list
-        cl = model.Codelist(id=codelist_id, is_external_reference=False, is_final=True)
+        cl = model.Codelist(id=codelist_id, **cl_args)
 
         # Add codes
         for id, name in codes.items():
@@ -46,11 +49,42 @@ def create_structures() -> msg.StructureMessage:
         # Store in the message
         sm.add(cl)
 
+    # Create the AREA code list
+    cl = model.Codelist(
+        id="AREA",
+        description="Original data has only alpha-3 codes. "
+        "Names retrieved from the ISO 3166-1 database via pycountry.",
+        **cl_args
+    )
+
+    # Determine unique values from the "data" sheet
+    values = pd.read_excel(FILENAME, sheet_name="data")["CountryISO3"].unique()
+
+    # Add codes
+    for value in sorted(values):
+        try:
+            # Look up a record for this value
+            country = countries.lookup(value)
+            extra = None
+        except LookupError:
+            if value == "ROM":
+                # Handle a known idiosyncrasy of the data
+                country = countries.lookup("ROU")
+                extra = "ISO 3166-1 alpha-3 : ROU"
+            else:
+                raise  # Something else; fail
+
+        # Create a code
+        cl.append(model.Code(id=value, name=country.name, description=extra))
+
+    sm.add(cl)
+
     # TODO Create the YEAR code list
     # TODO Create the concept scheme with the measures
     # TODO Create the data structure definition(s) and data frame(s)
 
     return sm
+
 
 def convert_data(structures) -> msg.DataMessage:
     """Convert data to SDMX."""
