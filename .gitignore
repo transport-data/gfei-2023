@@ -3,6 +3,8 @@
 *#
 
 # Output
+*.csv
+*.gz
 *.xml
 
 # Pytest and related

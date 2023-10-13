@@ -151,11 +151,54 @@ def create_structures() -> msg.StructureMessage:
 
 def convert_data(structures) -> msg.DataMessage:
     """Convert data to SDMX."""
+    sm = structures  # Shorthand
+
     dm = msg.DataMessage()
 
-    df = pd.read_excel(FILENAME, sheet_name="data")
+    # - Read data from Excel file
+    # - Convert column names to dimension names; set index
+    df = (
+        pd.read_excel(FILENAME, sheet_name="data")
+        .rename(
+            columns={
+                "CountryISO3": "AREA",
+                "segment": "SEGMENT",
+                "powertrain": "POWERTRAIN",
+                "year": "YEAR",
+            }
+        )
+        .set_index(["AREA", "SEGMENT", "POWERTRAIN", "YEAR"])
+    )
 
-    # TODO convert to data sets in `dm`
+    # Convert data for each measure to data set
+    for id, info in MEASURE.items():
+        # Retrieve structure information
+        dsd = sm.structure[id]
+        column_name = info[0]
+
+        def _make_obs(index, value):
+            kv = {
+                "AREA": sm.codelist["AREA"][index[0]],
+                "SEGMENT": sm.codelist["SEGMENT"][index[1]],
+                "POWERTRAIN": sm.codelist["POWERTRAIN"][index[2]],
+                "YEAR": index[3],
+            }
+            return model.Observation(
+                dimension=dsd.make_key(model.Key, kv),
+                value=value,
+                value_for=dsd.measures[0].concept_identity,
+            )
+
+        # Convert each row into an Observation
+        obs = map(lambda item: _make_obs(*item), df[column_name].items())
+
+        # Create a data set containing the observations
+        ds = model.StructureSpecificDataSet(
+            described_by=sm.dataflow[id], structured_by=dsd, obs=list(obs)
+        )
+
+        # Add to the data message
+        dm.data.append(ds)
 
     return dm
 
@@ -168,8 +211,14 @@ def main():
 
     dm = convert_data(sm)
 
+    # All data in a single XML file
     with open("data.xml", "wb") as f:
         f.write(sdmx.to_xml(dm, pretty_print=True))
+
+    # Data for each data set/flow in separate CSV files
+    for ds in dm.data:
+        with open(f"data-{ds.described_by.id}.csv", "w") as f:
+            f.write(sdmx.to_csv(ds))
 
 
 if __name__ == "__main__":

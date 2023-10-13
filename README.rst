@@ -9,7 +9,8 @@ Then::
 
 See file ``create.py`` for inline documentation.
 
-The code generates two files:
+The code generates six files:
 
 - ``structure.xml`` —structural information.
-- ``data.xml`` —data.
+- ``data.xml`` —all data in SDMX-ML format.
+- ``data-{FP,REG,SEC,WT}.csv`` —data for each measure in separate SDMX-CSV files.
