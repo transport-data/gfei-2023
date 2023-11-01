@@ -50,8 +50,8 @@ def create_structures() -> msg.StructureMessage:
         id="GFEI_2023",
         name="GFEI 2023 benchmarking authors",
         contact=[
-            model.Contact(name="Pierpaolo Cazzola"),
-            model.Contact(name="Jacob Teter"),
+            model.Contact(name="Pierpaolo Cazzola", email=["pcazzola@ucdavis.edu"]),
+            model.Contact(name="Jacob Teter", email=["jacob.teter@gmail.com"]),
             model.Contact(name="Leonardo Paoli", email=["paoli.leonardo@gmail.com"]),
             model.Contact(
                 name="Paul Natsuo Kishimoto", email=["mail@paul.kishimoto.name"]
