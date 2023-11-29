@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pandas as pd
-import pooch  # type: ignore [import-untyped]
 import sdmx
 import sdmx.message as msg
 import sdmx.model.v21 as model
@@ -225,6 +224,11 @@ def convert_data(file_path: Path, structures: msg.StructureMessage) -> msg.DataM
 
 
 def main():
+    import zipfile
+    from itertools import chain
+
+    import pooch  # type: ignore [import-untyped]
+
     # Retrieve the file from Zenodo
     file_path = pooch.retrieve(**REMOTE_FILE)
 
@@ -237,14 +241,22 @@ def main():
     # Convert data to SDMX
     dm = convert_data(file_path, sm)
 
-    # Write all data in a single XML file
-    with open("data.xml", "wb") as f:
-        f.write(sdmx.to_xml(dm, pretty_print=True))
-
-    # Write data for each data set/flow in a separate CSV file
+    # Write data for each data set/flow in separate XML and CSV files
     for ds in dm.data:
-        with open(f"data-{ds.described_by.id}.csv", "w") as f:
+        name = f"data-{ds.described_by.id}"
+
+        _dm = msg.DataMessage(header=dm.header, data=[ds])
+        with open(f"{name}.xml", "wb") as f:
+            f.write(sdmx.to_xml(_dm, pretty_print=True))
+
+        with open(f"{name}.csv", "w") as f:
             f.write(sdmx.to_csv(ds))
+
+    # Compress the data
+    cwd = Path.cwd()
+    with zipfile.ZipFile("all.zip", mode="w", compression=zipfile.ZIP_LZMA) as zf:
+        for p in chain(cwd.glob("*.xml"), cwd.glob(".csv")):
+            zf.write(p)
 
 
 if __name__ == "__main__":

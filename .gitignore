@@ -2,7 +2,9 @@
 *.csv
 *.gz
 *.xml
+*.zip
 
 # Pytest and related
 .benchmarks
+.ipynb_checkpoints
 .pytest_cache
