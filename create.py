@@ -3,16 +3,21 @@
 from pathlib import Path
 
 import pandas as pd
+import pooch  # type: ignore [import-untyped]
 import sdmx
 import sdmx.message as msg
 import sdmx.model.v21 as model
 from pycountry import countries
 
-FILENAME = "supplementary_information_gfei2023_tdc.xlsx"
-
 DOI = {
     "report": "10.7922/G2HM56SV",
     "data": "10.5281/zenodo.10148348",
+    "data-v1": "10.5281/zenodo.10148349",
+}
+
+REMOTE_FILE = {
+    "url": f"doi:{DOI['data-v1']}/supplementary_information_GFEI2023_TDC.xlsx",
+    "known_hash": "sha256:dac6501c4249182c0dbb3e27ff9840d3115e6ec206cbe39cf07d4861f8cbfe20",
 }
 
 # Static structural information
@@ -48,7 +53,7 @@ MEASURE = {
 }
 
 
-def create_structures() -> msg.StructureMessage:
+def create_structures(file_path: Path) -> msg.StructureMessage:
     """Create data structures."""
     sm = msg.StructureMessage()
 
@@ -101,7 +106,7 @@ def create_structures() -> msg.StructureMessage:
     )
 
     # Determine unique values from the "data" sheet
-    values = pd.read_excel(FILENAME, sheet_name="data")["CountryISO3"].unique()
+    values = pd.read_excel(file_path, sheet_name="data")["CountryISO3"].unique()
 
     # Add codes
     for value in sorted(values):
@@ -165,7 +170,7 @@ def create_structures() -> msg.StructureMessage:
     return sm
 
 
-def convert_data(structures) -> msg.DataMessage:
+def convert_data(file_path: Path, structures: msg.StructureMessage) -> msg.DataMessage:
     """Convert data to SDMX."""
     sm = structures  # Shorthand
 
@@ -174,7 +179,7 @@ def convert_data(structures) -> msg.DataMessage:
     # - Read data from Excel file
     # - Convert column names to dimension names; set index
     df = (
-        pd.read_excel(FILENAME, sheet_name="data")
+        pd.read_excel(file_path, sheet_name="data")
         .rename(
             columns={
                 "CountryISO3": "AREA",
@@ -220,18 +225,23 @@ def convert_data(structures) -> msg.DataMessage:
 
 
 def main():
-    sm = create_structures()
+    # Retrieve the file from Zenodo
+    file_path = pooch.retrieve(**REMOTE_FILE)
+
+    # Create SDMX structure information
+    sm = create_structures(file_path)
 
     with open("structure.xml", "wb") as f:
         f.write(sdmx.to_xml(sm, pretty_print=True))
 
-    dm = convert_data(sm)
+    # Convert data to SDMX
+    dm = convert_data(file_path, sm)
 
-    # All data in a single XML file
+    # Write all data in a single XML file
     with open("data.xml", "wb") as f:
         f.write(sdmx.to_xml(dm, pretty_print=True))
 
-    # Data for each data set/flow in separate CSV files
+    # Write data for each data set/flow in a separate CSV file
     for ds in dm.data:
         with open(f"data-{ds.described_by.id}.csv", "w") as f:
             f.write(sdmx.to_csv(ds))

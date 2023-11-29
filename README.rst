@@ -1,8 +1,7 @@
 Convert GFEI 2023 benchmarking data to SDMX
 *******************************************
 
-Usage: place the data file ``supplementary_information_gfei2023_tdc.xlsx`` in the same directory as this README.
-Then::
+Usage::
 
     pip install -r requirements.txt
     python create.py
