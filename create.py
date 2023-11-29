@@ -10,6 +10,11 @@ from pycountry import countries
 
 FILENAME = "supplementary_information_gfei2023_tdc.xlsx"
 
+DOI = {
+    "report": "10.7922/G2HM56SV",
+    "data": "10.5281/zenodo.10148348",
+}
+
 # Static structural information
 SEGMENT = {
     "large car": "Large car",
