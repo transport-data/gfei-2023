@@ -68,7 +68,11 @@ def create_structures() -> msg.StructureMessage:
 
     # Common arguments for creating maintainable artefacts
     ma_args = dict(
-        version="1.0", maintainer=a, is_external_reference=False, is_final=True
+        version="1.0",
+        maintainer=a,
+        is_external_reference=False,
+        is_final=True,
+        annotations=[model.Annotation(id="doi", text=DOI["data"])],
     )
 
     # Create an agency scheme to store
@@ -93,7 +97,7 @@ def create_structures() -> msg.StructureMessage:
         id="AREA",
         description="Original data has only alpha-3 codes. "
         "Names retrieved from the ISO 3166-1 database via pycountry.",
-        **ma_args
+        **ma_args,
     )
 
     # Determine unique values from the "data" sheet
