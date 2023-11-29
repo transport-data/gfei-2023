@@ -1,5 +1,7 @@
 # from copy import deepcopy
 
+from pathlib import Path
+
 import pandas as pd
 import sdmx
 import sdmx.message as msg
@@ -131,6 +133,9 @@ def create_structures() -> msg.StructureMessage:
         )
     dims.append(model.Dimension(id="YEAR"))
 
+    # Read description text from file
+    desc = Path("description.txt").read_text()
+
     for id, info in MEASURE.items():
         # Data structure definition (DSD)
         dsd = model.DataStructureDefinition(id=id, **ma_args)
@@ -140,7 +145,9 @@ def create_structures() -> msg.StructureMessage:
         dsd.measures.append(model.PrimaryMeasure(id=id, concept_identity=cs[id]))
 
         # Data flow structured by the DSD
-        dfd = model.DataflowDefinition(id=id, **ma_args, structure=dsd)
+        dfd = model.DataflowDefinition(
+            id=id, **ma_args, structure=dsd, description=desc
+        )
 
         # Store both
         sm.add(dsd)
