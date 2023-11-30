@@ -57,15 +57,30 @@ def create_structures(file_path: Path) -> msg.StructureMessage:
     sm = msg.StructureMessage()
 
     # Create the maintainer agency
+    _author = "Report author"
     a = model.Agency(
         id="GFEI_2023",
-        name="GFEI 2023 benchmarking authors",
+        name="GFEI 2023 benchmarking contributors",
         contact=[
-            model.Contact(name="Pierpaolo Cazzola", email=["pcazzola@ucdavis.edu"]),
-            model.Contact(name="Jacob Teter", email=["jacob.teter@gmail.com"]),
-            model.Contact(name="Leonardo Paoli", email=["paoli.leonardo@gmail.com"]),
             model.Contact(
-                name="Paul Natsuo Kishimoto", email=["mail@paul.kishimoto.name"]
+                name="Pierpaolo Cazzola",
+                email=["pcazzola@ucdavis.edu"],
+                responsibility=_author,
+            ),
+            model.Contact(
+                name="Leonardo Paoli",
+                email=["paoli.leonardo@gmail.com"],
+                responsibility=_author,
+            ),
+            model.Contact(
+                name="Jacob Teter",
+                email=["jacob.teter@gmail.com"],
+                responsibility=_author,
+            ),
+            model.Contact(
+                name="Paul Natsuo Kishimoto",
+                email=["mail@paul.kishimoto.name"],
+                responsibility="Data formatting only",
             ),
         ],
     )
