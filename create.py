@@ -149,6 +149,7 @@ def create_structures(file_path: Path) -> msg.StructureMessage:
     cs = model.ConceptScheme(id="CONCEPTS", **ma_args)
     for id, info in MEASURE.items():
         cs.append(model.Concept(id=id, name=info[1]))
+    cs.append(model.Concept(id="UNIT_MEASURE", name="Unit of measurement"))
     sm.add(cs)
 
     # Create the data structure definitions and data flows
@@ -175,6 +176,15 @@ def create_structures(file_path: Path) -> msg.StructureMessage:
         dsd.dimensions.extend(dims)
         # Record the primary measure
         dsd.measures.append(model.PrimaryMeasure(id=id, concept_identity=cs[id]))
+        # Single, mandatory attribute attached at the data set level
+        dsd.attributes.append(
+            model.DataAttribute(
+                id="UNIT_MEASURE",
+                concept_role=cs["UNIT_MEASURE"],
+                related_to=model.NoSpecifiedRelationship(),
+                usage_status=model.UsageStatus["mandatory"],
+            )
+        )
 
         # Data flow structured by the DSD
         dfd = model.DataflowDefinition(
@@ -235,6 +245,10 @@ def convert_data(file_path: Path, structures: msg.StructureMessage) -> msg.DataM
         ds = model.StructureSpecificDataSet(
             described_by=sm.dataflow[id], structured_by=dsd, obs=list(obs)
         )
+
+        # Attach an attribute that gives the units of measurement
+        _um = "UNIT_MEASURE"
+        ds.attrib[_um] = model.AttributeValue(value=info[2], value_for=_um, dsd=dsd)
 
         # Add to the data message
         dm.data.append(ds)
