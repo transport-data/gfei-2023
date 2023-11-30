@@ -40,6 +40,10 @@ POWERTRAIN = {
     "unclassified": "unclassified",
 }
 
+# Mapping from MEASURE id to tuple of:
+# 1. Column name in Excel-format data.
+# 2. Measure name.
+# 3. UNIT_MEASURE.
 MEASURE = {
     "SEC": (
         "specific_energy_cosumption_l_100km",  # [sic]
@@ -141,8 +145,8 @@ def create_structures(file_path: Path) -> msg.StructureMessage:
 
     sm.add(cl)
 
-    # Create a concept scheme containing the measures
-    cs = model.ConceptScheme(id="MEASURE", **ma_args)
+    # Create a concept scheme containing the measures and other concepts
+    cs = model.ConceptScheme(id="CONCEPTS", **ma_args)
     for id, info in MEASURE.items():
         cs.append(model.Concept(id=id, name=info[1]))
     sm.add(cs)
