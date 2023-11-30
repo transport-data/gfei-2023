@@ -16,7 +16,7 @@ DOI = {
 
 REMOTE_FILE = {
     "url": f"doi:{DOI['data-v1']}/supplementary_information_GFEI2023_TDC.xlsx",
-    "known_hash": "sha256:dac6501c4249182c0dbb3e27ff9840d3115e6ec206cbe39cf07d4861f8cbfe20",
+    "known_hash": "md5:1e73df877002e4dcc0bd4ced80b33049",
 }
 
 # Static structural information
